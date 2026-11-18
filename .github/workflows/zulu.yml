@@ -1,0 +1,51 @@
+name: Build and Push Zulu Images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'zulu/**'
+      - 'build.sh'
+      - '.github/workflows/zulu.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  versions:
+    runs-on: ubuntu-latest
+    outputs:
+      dirs: ${{ steps.find.outputs.dirs }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Find image folders
+        id: find
+        run: echo "dirs=$(ls -d zulu/*/ | sed 's#/$##' | jq -Rnc '[inputs]')" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: versions
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJson(needs.versions.outputs.dirs) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        run: bash ./build.sh ${{ matrix.dir }}

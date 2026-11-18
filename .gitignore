@@ -1,0 +1,19 @@
+# IDEA
+.idea/
+*.iml
+out/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local secrets / env
+.env
+*.env.local
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*~
